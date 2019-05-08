@@ -625,9 +625,9 @@ class system_info(object):
             if notfound_action:
                 if not self.has_info():
                     if notfound_action == 1:
-                        warnings.warn(self.notfounderror.__doc__, stacklevel=2)
+                        warnings.warn("self.notfounderror", stacklevel=2)
                     elif notfound_action == 2:
-                        raise self.notfounderror(self.notfounderror.__doc__)
+                        raise self.notfounderror("self.notfounderror")
                     else:
                         raise ValueError(repr(notfound_action))
 
@@ -698,9 +698,11 @@ class system_info(object):
                 continue
 
             if d not in ret:
-                ret.append(d)
+                # Hack for QPython cross compile
+                if (not d.lower().startswith("/us")) and (not d.lower().startswith("/root")):
+                    ret.append(d)
 
-        log.debug('( %s = %s )', key, ':'.join(ret))
+        log.error('( %s = %s )', key, ':'.join(ret))
         return ret
 
     def get_lib_dirs(self, key='library_dirs'):
@@ -1553,7 +1555,8 @@ class lapack_opt_info(system_info):
                                              lapack_mkl_info):
             # Use the system lapack from Accelerate or vecLib under OSX
             args = []
-            link_args = []
+            link_args = ['-L'+os.environ['ANDROID_NDK']+'/toolchains/renderscript/prebuilt/'+os.uname().sysname.lower()+'-x86_64/platform/arm','-lcompiler_rt'] #, '-lcompiler_rt'] #'-lc', '-ldl', '-L'+os.environ['ANDROID_NDK']+'/toolchains/renderscript/prebuilt/'+os.uname().sysname.lower()+'-x86_64/platform/arm'] #, '-lcompiler_rt']
+            """
             if get_platform()[-4:] == 'i386' or 'intel' in get_platform() or \
                'x86_64' in get_platform() or \
                'i386' in platform.platform():
@@ -1574,6 +1577,7 @@ class lapack_opt_info(system_info):
                 else:
                     args.extend(['-faltivec'])
                 link_args.extend(['-Wl,-framework', '-Wl,vecLib'])
+            """
             if args:
                 self.set_info(extra_compile_args=args,
                               extra_link_args=link_args,
@@ -1592,7 +1596,7 @@ class lapack_opt_info(system_info):
             info = atlas_info
 
         else:
-            warnings.warn(AtlasNotFoundError.__doc__, stacklevel=2)
+            warnings.warn("AtlasNotFoundError", stacklevel=2)
             need_blas = 1
             need_lapack = 1
             dict_append(info, define_macros=[('NO_ATLAS_INFO', 1)])
@@ -1603,10 +1607,10 @@ class lapack_opt_info(system_info):
             if lapack_info:
                 dict_append(info, **lapack_info)
             else:
-                warnings.warn(LapackNotFoundError.__doc__, stacklevel=2)
+                warnings.warn("LapackNotFoundError", stacklevel=2)
                 lapack_src_info = get_info('lapack_src')
                 if not lapack_src_info:
-                    warnings.warn(LapackSrcNotFoundError.__doc__, stacklevel=2)
+                    warnings.warn("LapackSrcNotFoundError", stacklevel=2)
                     return
                 dict_append(info, libraries=[('flapack_src', lapack_src_info)])
 
@@ -1615,10 +1619,10 @@ class lapack_opt_info(system_info):
             if blas_info:
                 dict_append(info, **blas_info)
             else:
-                warnings.warn(BlasNotFoundError.__doc__, stacklevel=2)
+                warnings.warn("BlasNotFoundError", stacklevel=2)
                 blas_src_info = get_info('blas_src')
                 if not blas_src_info:
-                    warnings.warn(BlasSrcNotFoundError.__doc__, stacklevel=2)
+                    warnings.warn("BlasSrcNotFoundError", stacklevel=2)
                     return
                 dict_append(info, libraries=[('fblas_src', blas_src_info)])
 
@@ -1659,7 +1663,8 @@ class blas_opt_info(system_info):
                                              blas_mkl_info or blis_info):
             # Use the system BLAS from Accelerate or vecLib under OSX
             args = []
-            link_args = []
+            link_args = ['-L'+os.environ['ANDROID_NDK']+'/toolchains/renderscript/prebuilt/'+os.uname().sysname.lower()+'-x86_64/platform/arm','-lcompiler_rt'] #, '-lcompiler_rt'] #'-lc', '-ldl', '-L'+os.environ['ANDROID_NDK']+'/toolchains/renderscript/prebuilt/'+os.uname().sysname.lower()+'-x86_64/platform/arm'] #, '-lcompiler_rt']
+            """
             if get_platform()[-4:] == 'i386' or 'intel' in get_platform() or \
                'x86_64' in get_platform() or \
                'i386' in platform.platform():
@@ -1684,6 +1689,7 @@ class blas_opt_info(system_info):
                 args.extend([
                     '-I/System/Library/Frameworks/vecLib.framework/Headers'])
                 link_args.extend(['-Wl,-framework', '-Wl,vecLib'])
+            """
             if args:
                 self.set_info(extra_compile_args=args,
                               extra_link_args=link_args,
@@ -1696,7 +1702,7 @@ class blas_opt_info(system_info):
         if atlas_info:
             info = atlas_info
         else:
-            warnings.warn(AtlasNotFoundError.__doc__, stacklevel=2)
+            warnings.warn("AtlasNotFoundError", stacklevel=2)
             need_blas = 1
             dict_append(info, define_macros=[('NO_ATLAS_INFO', 1)])
 
@@ -1705,10 +1711,10 @@ class blas_opt_info(system_info):
             if blas_info:
                 dict_append(info, **blas_info)
             else:
-                warnings.warn(BlasNotFoundError.__doc__, stacklevel=2)
+                warnings.warn("BlasNotFoundError", stacklevel=2)
                 blas_src_info = get_info('blas_src')
                 if not blas_src_info:
-                    warnings.warn(BlasSrcNotFoundError.__doc__, stacklevel=2)
+                    warnings.warn("BlasSrcNotFoundError", stacklevel=2)
                     return
                 dict_append(info, libraries=[('fblas_src', blas_src_info)])
 
